@@ -123,7 +123,7 @@ void brickHandler() {
 
 
 class Brick {
-  //int brickx, bricky;
+  
   PVector location;
   int brickWidth;
   int brickHeight;
@@ -167,7 +167,7 @@ class Brick {
   }
 }
 class Racket {
-  //float racketx, rackety;
+  
   PVector location;
   int racketWidth = 100;
   int racketHeight = 10;
@@ -272,6 +272,7 @@ class Ball {
     }
     return true;
   }
+  
   void makeBounceBottom(float surface) {
     location.y = surface - ballSize/2;
     velocity.y *= -1;
@@ -279,7 +280,7 @@ class Ball {
   void makeBounceTop(float surface) {
     location.y = surface + ballSize/2;
     velocity.y *= -1;
-  }
+  } 
   void makeBounceLeft(float surface) {
     location.x = surface + ballSize/2;
     velocity.x *= -1;
