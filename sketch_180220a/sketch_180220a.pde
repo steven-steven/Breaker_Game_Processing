@@ -1,5 +1,9 @@
 int screenMode = 0;  //0:initScreen 1:gameScreen 2:gameOverScreen 3:gameOverScreen
 
+//UI Controls
+ArrayList<Button> btnList = new ArrayList<Button>();    //UI Buttons to display
+
+
 //gameItems
 Ball b;
 Racket r;
@@ -14,6 +18,22 @@ void setup() {
   b = new Ball();
   r = new Racket();
   life = initLife;
+  
+  btnList.add(new Button("start", "Click To Begin", 20, new PVector(300, 80), new PVector(width/2, height/2)));
+  btnList.add(new Button("restart_game", "Restart", 15, new PVector(100, 25), new PVector(80, height-20)));
+  btnList.add(new Button("pause", "Pause", 15, new PVector(100, 25), new PVector(200, height-20)));
+  btnList.add(new Button("continue", "Continue >>", 20, new PVector(300, 80), new PVector(width/2, 150)));
+  btnList.add(new Button("restart_pause", "Restart", 20, new PVector(300, 80), new PVector(width/2, 300)));
+}
+void restart(){
+  life = initLife;
+  for (int i = bricks.size()-1; i>=0; --i) {
+    bricks.remove(i);
+  }
+  screenMode = 0;  //will create bricks when user press Start
+  //reset ball and racket
+  b = new Ball();
+  r = new Racket();
 }
 
 /*------ DRAW -------*/
@@ -23,18 +43,24 @@ void draw() {
   } else if (screenMode == 1) {
     gameScreen();
   } else if (screenMode == 2) {
+    initScreen();
     gameOverScreen();
-  } else {
+  } else if (screenMode == 3) {
+    pauseScreen();
+  }else {
+    initScreen();
     winScreen();
   }
+  buttonHandler();
 }
 
 /*------ SCREEN DRAW --------*/
 void initScreen() {
   background(0);
   textAlign(CENTER);
-  textSize(20);
-  text("Click To Begin", height/2, width/2);
+  textSize(80);
+  fill(255);
+  text("Brick Breaker", width/2, 100);
 }
 void gameScreen() {
   background(255);
@@ -48,19 +74,44 @@ void gameScreen() {
   b.watchRacketBounce(r.location, r.racketWidth);
 }
 void gameOverScreen() {
-  background(0);
+  textAlign(CENTER);
+  text("YOU LOSE", width/2, height-50);
 }
 void winScreen() {
-  background(0);
+  textAlign(CENTER);
+  text("YOU WIN!!", width/2, height-50);
+}
+void pauseScreen() {
+  gameScreen();
+  fill(0,200);
+  rectMode(CORNER);
+  rect(0,0,width,height);
 }
 
 /*--Input Interrupts--*/
 public void mousePressed() {
   if (screenMode == 0) {
-    startGame();
-  } else if (screenMode == 1) {
+    if (btnList.get(0).btnHovered) {
+      startGame();
+    }
+  } else if (screenMode == 1) {  //play
     if (!b.isBallReleased) {
       b.isBallReleased = true;
+    }
+    if (btnList.get(1).btnHovered) {  //restart Button
+      restart();
+    }else if (btnList.get(2).btnHovered) {  //restart Button
+      pause();
+    }
+  } else if (screenMode == 3) {  //pause
+    if (btnList.get(3).btnHovered) {  //restart Button
+      screenMode = 1;
+    }else if (btnList.get(4).btnHovered) {  //restart Button
+      restart();
+    }
+  }else if (screenMode == 2) {  //gameOver
+    if (btnList.get(4).btnHovered) {  //restart Button
+      restart();
     }
   }
 }
@@ -74,8 +125,12 @@ void gameOver() {
   //Reset Game
   screenMode = 2;
 }
+void pause(){
+  screenMode = 3; 
+}
 void drawText() {
   textAlign(RIGHT);
+  fill(0);
   textSize(15);
   text("Life: "+life, height-20, width-20);
 }
@@ -99,7 +154,7 @@ void createBricks() {
 void brickHandler() {
   if (bricks.size() == 0) {
     //Win
-    screenMode = 3;
+    screenMode = 4;
   }
 
   int indexToRemove = -1;
@@ -117,6 +172,55 @@ void brickHandler() {
 
   if (indexToRemove >=0) {
     bricks.remove(indexToRemove);
+  }
+}
+
+void buttonHandler() {
+  if (screenMode ==0) {  //init
+    //Submit input button
+    for (int i = 0; i<1; ++i) {  //control/display first 2 botton in arraylist
+      btnList.get(i).drawBtn();
+      if (overRect(btnList.get(i).pos, btnList.get(i).size)) {
+        btnList.get(i).btnHovered = true;
+      } else {
+        btnList.get(i).btnHovered = false;
+      }
+    }
+  }else if(screenMode ==1){  //game
+    for (int i = 1; i<3; ++i) {  //control/display first 2 botton in arraylist
+      btnList.get(i).drawBtn();
+      if (overRect(btnList.get(i).pos, btnList.get(i).size)) {
+        btnList.get(i).btnHovered = true;
+      } else {
+        btnList.get(i).btnHovered = false;
+      }
+    }
+  }else if(screenMode == 3){  //pause
+    for (int i = 3; i<5; ++i) {  //control/display first 2 botton in arraylist
+      btnList.get(i).drawBtn();
+      if (overRect(btnList.get(i).pos, btnList.get(i).size)) {
+        btnList.get(i).btnHovered = true;
+      } else {
+        btnList.get(i).btnHovered = false;
+      }
+    }
+  } else if(screenMode == 2){  //pause
+    for (int i = 4; i<btnList.size(); ++i) {  //control/display first 2 botton in arraylist
+      btnList.get(i).drawBtn();
+      if (overRect(btnList.get(i).pos, btnList.get(i).size)) {
+        btnList.get(i).btnHovered = true;
+      } else {
+        btnList.get(i).btnHovered = false;
+      }
+    }
+  }
+}
+boolean overRect(PVector pos, PVector size) {
+  if (mouseX >= pos.x-size.x/2 && mouseX <= pos.x+size.x/2 &&
+    mouseY >= pos.y-size.y/2 && mouseY <= pos.y+size.y/2) {
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -181,7 +285,9 @@ class Racket {
   void drawRacket() {
     rectMode(CENTER);
     fill(racketColor);
-    location.x = constrain(mouseX, racketWidth/2, width-racketWidth/2);
+    if(screenMode != 3){ //not paused
+      location.x = constrain(mouseX, racketWidth/2, width-racketWidth/2);
+    }
     rect(location.x, location.y, racketWidth, racketHeight);
   }
 }
@@ -214,7 +320,9 @@ class Ball {
   }
 
   void moveBall() {
-    location.add(velocity);
+    if(screenMode != 3){  //not pause
+      location.add(velocity);
+    }
   }
 
   void watchRacketBounce(PVector racketLocation, float racketWidth) {
@@ -288,5 +396,44 @@ class Ball {
   void makeBounceRight(float surface) {
     location.x = surface - ballSize/2;
     velocity.x *= -1;
+  }
+}
+//Button Class: Implemented property of all UI Buttons
+
+class Button {
+  String id;
+  String tag;
+  PVector size; //x = width; y = height
+  PVector pos; //left top corner
+  boolean btnHovered;
+  int fontSize;
+
+  public Button(String id, String text, int font_size, PVector size, PVector pos) {
+    this.id = id;
+    tag = text;
+    this.size = size;
+    this.pos = pos;
+    btnHovered = false;
+    fontSize = font_size;
+  }
+
+  void drawBtn() {
+    if (btnHovered) {
+      fill(0);  //background black if hovered
+    } else {
+      fill(255); //else white (default)
+    }
+    stroke(0);
+    rectMode(CENTER);
+    rect(pos.x, pos.y, size.x, size.y);
+
+    if (btnHovered) {
+      fill(255);
+    } else {
+      fill(0);
+    }
+    textSize(fontSize);
+    textAlign(CENTER, CENTER);
+    text(tag, pos.x, pos.y, size.x, size.y);
   }
 }
